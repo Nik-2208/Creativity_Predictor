@@ -12,6 +12,16 @@ else:
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Predict Creativity", "Test Scenarios"])
 
+def get_creativity_state(score):
+    if score <= 80:
+        return "Low creativity / Rest mode", "Short focus periods"
+    elif score <= 150:
+        return "Moderate creativity", "1–2 hours of peak work"
+    elif score <= 250:
+        return "High creativity", "2–4 hours of sustained focus"
+    else:
+        return "Ultra-creative / Flow state", "3–5 hours of deep work"
+
 if page == "Predict Creativity":
     st.title("💡 Creativity Burst Predictor")
     st.write("Estimate your *creativity burst score* based on daily habits and work factors.")
@@ -28,18 +38,22 @@ if page == "Predict Creativity":
     features = np.array([[hours_coding, coffee_intake, sleep_hours,
                           commits, bugs_reported, ai_usage,
                           cognitive_load, task_success]])
+    if features[0,1] == 0:
+        features[0,1] = 50
 
     if scaler:
-        features = scaler.transform(features)
+        features_scaled = scaler.transform(features)
+    else:
+        features_scaled = features
 
-    prediction = model.predict(features)[0]
+    prediction = model.predict(features_scaled)[0]
+    state, duration = get_creativity_state(prediction)
 
     st.subheader("🎯 Predicted Creative Burst")
     st.metric(label="Creativity Score", value=f"{prediction:.2f}")
-
+    st.write(f"**Current state:** {state}")
+    st.write(f"**Expected productive duration:** {duration}")
     st.write(
-        f"Your predicted creativity burst score is **{prediction:.2f}**. \n\n"
-        "Higher scores suggest you're in a strong creative state today. \n\n"
         "This score depends on a mix of coding hours, rest, caffeine, AI use, and productivity factors."
     )
 
@@ -63,7 +77,7 @@ elif page == "Test Scenarios":
             "High productivity day with max inputs"
         ]
         test_array = np.array(test_cases)
-        test_array[:, 1] = np.where(test_array[:, 1] == 0, 50, test_array[:, 1])
+        test_array[:,1] = np.where(test_array[:,1] == 0, 50, test_array[:,1])
         if scaler:
             test_array_scaled = scaler.transform(test_array)
         else:
@@ -71,4 +85,6 @@ elif page == "Test Scenarios":
 
         preds = model.predict(test_array_scaled)
         for i, pred in enumerate(preds):
+            state, duration = get_creativity_state(pred)
             st.write(f"**Scenario {i+1}:** {labels[i]} → Predicted Creativity Burst: **{pred:.2f}**")
+            st.write(f"Current state: {state}, Expected productive duration: {duration}\n")
