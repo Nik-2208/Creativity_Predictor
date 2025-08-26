@@ -38,3 +38,30 @@ st.write(
     "Higher scores suggest you're in a strong creative state today. \n\n"
     "This score depends on a mix of coding hours, rest, caffeine, AI use, and productivity factors."
 )
+
+st.header("🧪 Test Multiple Scenarios")
+if st.button("Run Example Scenarios"):
+    test_cases = [
+        [6, 0, 7, 10, 2, 3, 5, 7],
+        [8, 200, 6, 15, 5, 4, 6, 8],
+        [3, 50, 8, 5, 1, 1, 3, 5],
+        [0, 0, 5, 0, 0, 0, 1, 3],
+        [10, 300, 9, 20, 10, 8, 8, 9]
+    ]
+    labels = [
+        "Zero coffee intake, moderate coding and AI usage",
+        "High coffee intake, high coding, active developer",
+        "Moderate coffee, low-to-moderate activity",
+        "Very low activity day, minimal productivity",
+        "High productivity day with max inputs"
+    ]
+    test_array = np.array(test_cases)
+    test_array[:, 1] = np.where(test_array[:, 1] == 0, 50, test_array[:, 1])
+    if scaler:
+        test_array_scaled = scaler.transform(test_array)
+    else:
+        test_array_scaled = test_array
+
+    preds = model.predict(test_array_scaled)
+    for i, pred in enumerate(preds):
+        st.write(f"**Scenario {i+1}:** {labels[i]} → Predicted Creativity Burst: **{pred:.2f}**")
